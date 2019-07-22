@@ -1,7 +1,6 @@
 {
 	"options": {
 		"enableDescription": true,
-		"threads": 10,
 		"timeFormat": "2006-01-02 15:04"
 	},
 	"regex": {
