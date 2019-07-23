@@ -2,6 +2,7 @@ package main
 
 import (
 	"sync"
+	"unicode"
 )
 
 func CreateWebNodeList() (result WebNodeList) {
@@ -14,20 +15,38 @@ type WebNodeList struct {
 	list []WebNode
 }
 
-func compareWebNodes(lhs, rhs WebNode) (validOrder bool) {
-	rhsParent := rhs.GetParentPath()
-	switch {
-	case lhs.path == rhsParent:
+func compareChar(lhs, rhs byte) (validOrder bool) {
+	if lhs == rhs {
 		return true
-	case lhs.GetParentPath() != rhsParent:
-		return false
-	case lhs.nodeType == rhs.nodeType:
-		return lhs.path < rhs.path
-	case lhs.nodeType == file && rhs.nodeType != file:
-		return true
-	default:
-		return false
 	}
+	switch {
+		case unicode.ToLower(rune(lhs)) == unicode.ToLower(rune(rhs)): return lhs > rhs
+		case rhs == '/': return true
+		case lhs == '/': return false
+		default: return unicode.ToLower(rune(lhs)) < unicode.ToLower(rune(rhs))
+	}
+}
+
+func intMin(a, b int) (min int) {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func lexCompare(lhs, rhs string) (validOrder bool) {
+	length := intMin(len(lhs), len(rhs))
+	for i := 0; i < length; i++ {
+		if lhs[i] != rhs[i] {
+			return compareChar(lhs[i], rhs[i])
+		}
+	}
+	return len(lhs) < len(rhs)
+}
+
+func compareWebNodes(lhs, rhs WebNode) (validOrder bool) {
+	return lexCompare(lhs.path, rhs.path)
 }
 
 func (l *WebNodeList) insertAtIndex(n WebNode, i int) {

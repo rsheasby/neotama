@@ -5,13 +5,9 @@ import (
 	"io/ioutil"
 	"fmt"
 	"runtime"
-	// "github.com/davecgh/go-spew/spew"
 )
 
-var _ = fmt.Println
-
 func getUrl(url string) (html string) {
-	// fmt.Println("Getting url", url)
 	res, _ := http.Get(url)
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
@@ -30,7 +26,6 @@ func Spider(job JobConfig) {
 	wnl.InsertSorted([]WebNode {WebNode {pending, directory, job.url, job.url, nil, 0, ""}})
 	for {
 		if wnl.IsDone() {
-			// spew.Dump(wnl.list)
 			for _, v := range(wnl.list) {
 				fmt.Println(v.path)
 			}
