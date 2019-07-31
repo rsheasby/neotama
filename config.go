@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"regexp"
+	"log"
 )
 
 type JobConfig struct {
@@ -30,10 +31,19 @@ type ParserConfig struct {
 }
 
 func readParserConfig(filename string) (result ParserConfig) {
-	fileContents, _ := ioutil.ReadFile(filename)
-	json.Unmarshal(fileContents, &result)
-	result.CompiledRegexp, _ = regexp.Compile(result.Regex.LineMatch)
-	// TODO: Error handling
+	fileContents, fileErr := ioutil.ReadFile(filename)
+	if fileErr != nil {
+		log.Fatalf("Could not read parser config file \"%s\".", filename)
+	}
+	jsonErr := json.Unmarshal(fileContents, &result)
+	if jsonErr != nil {
+		log.Fatalf("Parser config file \"%s\" is not valid JSON.", filename)
+	}
+	compRegexp, regexpErr := regexp.Compile(result.Regex.LineMatch)
+	if regexpErr != nil {
+		log.Fatalf("Invalid regex in parser config file.")
+	}
+	result.CompiledRegexp = compRegexp
 	return
 }
 

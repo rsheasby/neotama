@@ -24,12 +24,12 @@ const (
 	pending NodeStatus = iota
 	busy
 	done
-	failed
 )
 
 type WebNode struct {
 	nodeStatus NodeStatus
 	nodeType NodeType
+	nodeFail bool
 	path string
 	name string
 	time *time.Time

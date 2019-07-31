@@ -2,7 +2,8 @@ package main
 
 import (
 	"sync"
-	"unicode"
+	"sort"
+	"fmt"
 )
 
 func CreateWebNodeList() (result WebNodeList) {
@@ -13,92 +14,74 @@ func CreateWebNodeList() (result WebNodeList) {
 type WebNodeList struct {
 	mux sync.Mutex
 	list []WebNode
+
+	pendingCount int
+	busyCount int
+	doneCount int
+
+	pendingPointer int
+	busyPointer int
+	printPointer int
 }
 
-func compareChar(lhs, rhs byte) (validOrder bool) {
-	if lhs == rhs {
-		return true
-	}
+func compareWebNodes(lhs, rhs *WebNode) (validOrder bool) {
 	switch {
-		case unicode.ToLower(rune(lhs)) == unicode.ToLower(rune(rhs)): return lhs > rhs
-		case rhs == '/': return true
-		case lhs == '/': return false
-		default: return unicode.ToLower(rune(lhs)) < unicode.ToLower(rune(rhs))
+		case lhs.nodeType == rhs.nodeType: return lhs.path < rhs.path
+		case lhs.nodeType == file: return true
+		default: return false
 	}
 }
 
-func intMin(a, b int) (min int) {
-	if a < b {
-		return a
-	} else {
-		return b
+func (l *WebNodeList) insertAtIndex(n []WebNode, index int) {
+	insertLen := len(n)
+	l.list = append(l.list, make([]WebNode, insertLen)...)
+	copy(l.list[index+insertLen:], l.list[index:])
+	for i := 0; i < insertLen; i++ {
+		l.list[index+i] = n[i]
 	}
 }
 
-func lexCompare(lhs, rhs string) (validOrder bool) {
-	length := intMin(len(lhs), len(rhs))
-	for i := 0; i < length; i++ {
-		if lhs[i] != rhs[i] {
-			return compareChar(lhs[i], rhs[i])
-		}
-	}
-	return len(lhs) < len(rhs)
-}
-
-func compareWebNodes(lhs, rhs WebNode) (validOrder bool) {
-	return lexCompare(lhs.path, rhs.path)
-}
-
-func (l *WebNodeList) insertAtIndex(n WebNode, i int) {
-	l.list = append(l.list, WebNode{})
-	copy(l.list[i+1:], l.list[i:])
-	l.list[i] = n
-}
-
-func (l *WebNodeList) containsPath(path string) (result bool) {
-	for _, v := range(l.list) {
-		if v.path == path {
-			return true
-		}
-	}
-	return false
-}
-
-func (l * WebNodeList) InsertSorted(nodes []WebNode) {
+func (l *WebNodeList) InsertSorted(nodes []WebNode, parentPath string, sortNodes bool) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
-	NODES:
-	for _, node := range(nodes) {
-		if !l.containsPath(node.path) {
-			for k, v := range(l.list) {
-				if compareWebNodes(node, v) {
-					l.insertAtIndex(node, k)
-					continue NODES
-				}
-			}
-			l.list = append(l.list, node)
+	if sortNodes {
+		sort.Slice(nodes, func(i, j int) bool { return compareWebNodes(&nodes[i], &nodes[j]) })
+	}
+	for i := 0; i < len(nodes); i++ {
+		if nodes[i].nodeStatus == pending {
+			l.pendingCount++
 		}
 	}
+	for l.busyPointer < len(l.list) && l.list[l.busyPointer].nodeStatus == done {
+		l.busyPointer++
+	}
+	for i := l.busyPointer; i < len(l.list); i++ {
+		if l.list[i].nodeStatus == busy && l.list[i].path == parentPath {
+			l.insertAtIndex(nodes, i + 1)
+			return
+		}
+	}
+	l.list = append(l.list, nodes...)
 }
 
 func (l *WebNodeList) IsDone() (bool) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
-	for _, v := range(l.list) {
-		if v.nodeStatus == pending || v.nodeStatus == busy {
-			return false
-		}
-	}
-	return true
+	return l.pendingCount == 0 && l.busyCount == 0
 }
 
 func (l *WebNodeList) GetPending() (result WebNode, wait bool) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
-	for k, v := range(l.list) {
-		if v.nodeStatus == pending {
-			l.list[k].nodeStatus = busy
-			result = v
+	if l.pendingCount == 0 {
+		wait = true
+		return
+	}
+	for i := 0; i < len(l.list); i++ {
+		if l.list[i].nodeStatus == pending {
+			l.pendingPointer = i
+			l.setStatusByIndex(i, busy)
+			result = l.list[i]
 			return
 		}
 	}
@@ -109,9 +92,36 @@ func (l *WebNodeList) GetPending() (result WebNode, wait bool) {
 func (l *WebNodeList) SetStatus(path string, status NodeStatus) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
-	for k, v := range(l.list) {
-		if v.path == path {
-			l.list[k].nodeStatus = status
+	for i := 0; i < len(l.list); i++ {
+		if l.list[i].path == path {
+			l.setStatusByIndex(i, status)
+			return
+		}
+	}
+}
+
+func (l *WebNodeList) setStatusByIndex(index int, status NodeStatus) {
+	switch l.list[index].nodeStatus {
+		case pending: l.pendingCount--
+		case busy: l.busyCount--
+		case done: l.doneCount--
+	}
+	switch status {
+		case pending: l.pendingCount++
+		case busy: l.busyCount++
+		case done: l.doneCount++
+	}
+	l.list[index].nodeStatus = status
+	return
+}
+
+func (l * WebNodeList) PrintDone() {
+	l.mux.Lock()
+	defer l.mux.Unlock()
+	for ;l.printPointer < len(l.list); l.printPointer++ {
+		if l.list[l.printPointer].nodeStatus == done {
+			fmt.Println(l.list[l.printPointer].path)
+		} else {
 			return
 		}
 	}
