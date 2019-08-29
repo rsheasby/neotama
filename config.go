@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/akamensky/argparse"
-	"os"
-	"io/ioutil"
 	"encoding/json"
-	"regexp"
+	"github.com/akamensky/argparse"
+	"io/ioutil"
 	"log"
+	"os"
+	"regexp"
 )
 
 type JobConfig struct {
-	url string
+	url     string
 	threads int
 	pConfig ParserConfig
 }
@@ -18,13 +18,13 @@ type JobConfig struct {
 type ParserConfig struct {
 	Options struct {
 		EnableDescription bool
-		TimeFormat string
+		TimeFormat        string
 	}
 	Regex struct {
-		LineMatch string
-		PathGroup int
-		TimeGroup int
-		SizeGroup int
+		LineMatch        string
+		PathGroup        int
+		TimeGroup        int
+		SizeGroup        int
 		DescriptionGroup int
 	}
 	CompiledRegexp *regexp.Regexp
@@ -58,7 +58,7 @@ func ReadConfig() (config JobConfig) {
 
 	config.url = *url
 	config.threads = *threads
-	config.pConfig = readParserConfig((*configFile))
+	config.pConfig = readParserConfig(*configFile)
 
 	return
 }

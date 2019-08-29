@@ -1,13 +1,13 @@
 package main
 
 import (
-	"net/http"
 	"io/ioutil"
-	// "fmt"
+	"net/http"
 	"runtime"
+	// "github.com/davecgh/go-spew/spew"
 )
 
-func getUrl(url string) (html string) {
+func getUrl(url string) (body string) {
 	for i := 0; i < 3; i++ {
 		res, err := http.Get(url)
 		if err != nil {
@@ -20,37 +20,34 @@ func getUrl(url string) (html string) {
 	return ""
 }
 
-func getListing(url string, pConfig ParserConfig) (nodes []WebNode) {
-	html := getUrl(url)
-	nodes = ParseDirList(html, url, pConfig)
-	return
-}
-
 func Spider(job JobConfig) {
 	sem := make(chan bool, job.threads)
 	wnl := CreateWebNodeList()
-	wnl.InsertSorted([]WebNode {WebNode {pending, directory, false, job.url, job.url, nil, 0, ""}}, "", true)
+	tp := CreateTreePrinter(&wnl)
+	wnl.InsertSorted([]WebNode{{pending, directory, false, 0, true, job.url, job.url, nil, 0, ""}}, "", false)
 	for {
 		if wnl.IsDone() {
-			wnl.PrintDone()
+			// for _, v := range(wnl.list) {
+			// 	spew.Dump(v)
+			// }
+			tp.PrintDone()
 			return
+		}
+		tp.PrintDone()
+		sem <- true
+		pending, wait := wnl.GetPending()
+		if wait {
+			<-sem
+			runtime.Gosched()
+			continue
 		} else {
-			wnl.PrintDone()
-			sem<-true
-			pending, wait := wnl.GetPending()
-			if wait {
+			go func(node WebNode) {
+				html := getUrl(node.path)
 				<-sem
-				runtime.Gosched()
-				continue
-			} else {
-				go func(node WebNode) {
-					html := getUrl(node.path)
-					<-sem
-					nodes := ParseDirList(html, node.path, job.pConfig)
-					wnl.InsertSorted(nodes, node.path, true)
-					wnl.SetStatus(node.path, done)
-				}(pending)
-			}
+				nodes := ParseDirList(html, node.path, node.nodeDepth + 1, job.pConfig)
+				wnl.InsertSorted(nodes, node.path, true)
+				wnl.SetStatus(node.path, done)
+			}(pending)
 		}
 	}
 }

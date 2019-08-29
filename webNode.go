@@ -1,8 +1,8 @@
 package main
 
 import (
-	"time"
 	"regexp"
+	"time"
 )
 
 var dirParentRegex *regexp.Regexp
@@ -30,6 +30,8 @@ type WebNode struct {
 	nodeStatus NodeStatus
 	nodeType NodeType
 	nodeFail bool
+	nodeDepth int
+	nodeLastSibling bool
 	path string
 	name string
 	time *time.Time

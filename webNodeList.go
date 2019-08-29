@@ -1,9 +1,9 @@
 package main
 
 import (
-	"sync"
-	"sort"
 	"fmt"
+	"sort"
+	"sync"
 )
 
 func CreateWebNodeList() (result WebNodeList) {
@@ -42,6 +42,9 @@ func (l *WebNodeList) insertAtIndex(n []WebNode, index int) {
 }
 
 func (l *WebNodeList) InsertSorted(nodes []WebNode, parentPath string, sortNodes bool) {
+	if len(nodes) == 0 {
+		return
+	}
 	l.mux.Lock()
 	defer l.mux.Unlock()
 	if sortNodes {
@@ -57,6 +60,10 @@ func (l *WebNodeList) InsertSorted(nodes []WebNode, parentPath string, sortNodes
 	}
 	for i := l.busyPointer; i < len(l.list); i++ {
 		if l.list[i].nodeStatus == busy && l.list[i].path == parentPath {
+			for k := range(nodes) {
+				nodes[k].nodeDepth = l.list[i].nodeDepth + 1
+			}
+			nodes[len(nodes) - 1].nodeLastSibling = true
 			l.insertAtIndex(nodes, i + 1)
 			return
 		}
@@ -64,7 +71,7 @@ func (l *WebNodeList) InsertSorted(nodes []WebNode, parentPath string, sortNodes
 	l.list = append(l.list, nodes...)
 }
 
-func (l *WebNodeList) IsDone() (bool) {
+func (l *WebNodeList) IsDone() bool {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 	return l.pendingCount == 0 && l.busyCount == 0
