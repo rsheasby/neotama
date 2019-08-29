@@ -54,7 +54,10 @@ func ReadConfig() (config JobConfig) {
 	threads := parser.Int("t", "threads", &argparse.Options{Required: false, Help: "Maximum number of network threads to open at once", Default: 10})
 	configFile := parser.String("c", "config", &argparse.Options{Required: false, Help: "Config file to use for parsing the directory listing."})
 
-	parser.Parse(os.Args)
+	// TODO: Not sure if you care about the error or how you want to log it: https://github.com/akamensky/argparse#usage
+	if err := parser.Parse(os.Args); err != nil {
+        log.Printf("Command line argument error: %s", err)
+	}
 
 	config.url = *url
 	config.threads = *threads
