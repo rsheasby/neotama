@@ -27,14 +27,11 @@ func Spider(job JobConfig) {
 	wnl.InsertSorted([]WebNode{{pending, directory, false, 0, true, job.url, job.url, nil, 0, ""}}, "", false)
 	for {
 		if wnl.IsDone() {
-			// for _, v := range(wnl.list) {
-			// 	spew.Dump(v)
-			// }
 			tp.PrintDone()
 			return
 		}
 		tp.PrintDone()
-		sem <- true
+		sem<-true
 		pending, wait := wnl.GetPending()
 		if wait {
 			<-sem

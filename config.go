@@ -56,7 +56,7 @@ func ReadConfig() (config JobConfig) {
 
 	// TODO: Not sure if you care about the error or how you want to log it: https://github.com/akamensky/argparse#usage
 	if err := parser.Parse(os.Args); err != nil {
-        log.Printf("Command line argument error: %s", err)
+		log.Printf("Command line argument error: %s", err)
 	}
 
 	config.url = *url
