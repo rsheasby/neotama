@@ -24,18 +24,12 @@ func parseFilesize(filesize string) (bytes int64) {
 		multiplier = 1024
 	}
 	switch {
-	case strings.ContainsAny(matches[2], "kK"):
-		multiplier = math.Pow(multiplier, 1)
-	case strings.ContainsAny(matches[2], "mM"):
-		multiplier = math.Pow(multiplier, 2)
-	case strings.ContainsAny(matches[2], "gG"):
-		multiplier = math.Pow(multiplier, 3)
-	case strings.ContainsAny(matches[2], "tT"):
-		multiplier = math.Pow(multiplier, 4)
-	case strings.ContainsAny(matches[2], "pP"):
-		multiplier = math.Pow(multiplier, 5)
-	case strings.ContainsAny(matches[2], "zZ"):
-		multiplier = math.Pow(multiplier, 6)
+	case strings.ContainsAny(matches[2], "kK"): multiplier = math.Pow(multiplier, 1)
+	case strings.ContainsAny(matches[2], "mM"): multiplier = math.Pow(multiplier, 2)
+	case strings.ContainsAny(matches[2], "gG"): multiplier = math.Pow(multiplier, 3)
+	case strings.ContainsAny(matches[2], "tT"): multiplier = math.Pow(multiplier, 4)
+	case strings.ContainsAny(matches[2], "pP"): multiplier = math.Pow(multiplier, 5)
+	case strings.ContainsAny(matches[2], "zZ"): multiplier = math.Pow(multiplier, 6)
 	default:
 		multiplier = 1
 	}
@@ -78,7 +72,7 @@ func parseDirListEntry(html []string, parentURL string, pConfig ParserConfig) (n
 		return
 	}
 	node.path = parentURL + e.path
-	node.name, _ = url.QueryUnescape(e.path)
+	node.name, _ = url.PathUnescape(e.path)
 	if lastChar(node.path) == "/" {
 		node.nodeType = directory
 		node.nodeStatus = pending

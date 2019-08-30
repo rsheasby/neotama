@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"runtime"
-	// "github.com/davecgh/go-spew/spew"
 )
 
 func getUrl(url string) (body string) {
@@ -23,15 +22,15 @@ func getUrl(url string) (body string) {
 func Spider(job JobConfig) {
 	sem := make(chan bool, job.threads)
 	wnl := CreateWebNodeList()
-	tp := CreateTreePrinter(&wnl)
+	wp := CreateWnlPrinter(&wnl, job.outputFormat)
 	wnl.InsertSorted([]WebNode{{pending, directory, false, 0, true, job.url, job.url, nil, 0, ""}}, "", false)
 	for {
 		if wnl.IsDone() {
-			tp.PrintDone()
+			wp.PrintDone()
 			return
 		}
-		tp.PrintDone()
-		sem<-true
+		wp.PrintDone()
+		sem <- true
 		pending, wait := wnl.GetPending()
 		if wait {
 			<-sem
@@ -41,7 +40,7 @@ func Spider(job JobConfig) {
 			go func(node WebNode) {
 				html := getUrl(node.path)
 				<-sem
-				nodes := ParseDirList(html, node.path, node.nodeDepth + 1, job.pConfig)
+				nodes := ParseDirList(html, node.path, node.nodeDepth+1, job.pConfig)
 				wnl.InsertSorted(nodes, node.path, true)
 				wnl.SetStatus(node.path, done)
 			}(pending)

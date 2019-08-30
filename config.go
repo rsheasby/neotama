@@ -9,10 +9,18 @@ import (
 	"regexp"
 )
 
+type OutputFormat int
+const (
+	tree OutputFormat = iota
+	list
+	urlencoded
+)
+
 type JobConfig struct {
 	url     string
 	threads int
 	pConfig ParserConfig
+	outputFormat OutputFormat
 }
 
 type ParserConfig struct {
@@ -52,7 +60,8 @@ func ReadConfig() (config JobConfig) {
 
 	url := parser.String("u", "url", &argparse.Options{Required: true, Help: "URL to crawl"})
 	threads := parser.Int("t", "threads", &argparse.Options{Required: false, Help: "Maximum number of network threads to open at once", Default: 10})
-	configFile := parser.String("c", "config", &argparse.Options{Required: false, Help: "Config file to use for parsing the directory listing."})
+	configFile := parser.String("c", "config", &argparse.Options{Required: false, Help: "Config file to use for parsing the directory listing"})
+	outputFormat := parser.Selector("o", "output", []string{"tree", "list", "urlencoded"}, &argparse.Options{Required: false, Default: "tree", Help: "Output format of results"})
 
 	// TODO: Not sure if you care about the error or how you want to log it: https://github.com/akamensky/argparse#usage
 	if err := parser.Parse(os.Args); err != nil {
@@ -62,6 +71,11 @@ func ReadConfig() (config JobConfig) {
 	config.url = *url
 	config.threads = *threads
 	config.pConfig = readParserConfig(*configFile)
+	switch *outputFormat {
+	case "tree": config.outputFormat = tree
+	case "list": config.outputFormat = list
+	case "urlencoded": config.outputFormat = urlencoded
+	}
 
 	return
 }

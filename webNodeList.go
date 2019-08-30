@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"sort"
 	"sync"
 )
@@ -21,7 +20,6 @@ type WebNodeList struct {
 
 	pendingPointer int
 	busyPointer int
-	printPointer int
 }
 
 func compareWebNodes(lhs, rhs *WebNode) (validOrder bool) {
@@ -120,16 +118,4 @@ func (l *WebNodeList) setStatusByIndex(index int, status NodeStatus) {
 	}
 	l.list[index].nodeStatus = status
 	return
-}
-
-func (l * WebNodeList) PrintDone() {
-	l.mux.Lock()
-	defer l.mux.Unlock()
-	for ;l.printPointer < len(l.list); l.printPointer++ {
-		if l.list[l.printPointer].nodeStatus == done {
-			fmt.Println(l.list[l.printPointer].path)
-		} else {
-			return
-		}
-	}
 }
