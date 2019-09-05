@@ -91,13 +91,16 @@ func parseDirListEntry(html []string, parentURL string, pConfig ParserConfig) (n
 	return
 }
 
-func ParseDirList(html, parentURL string, nodeDepth int, pConfig ParserConfig) (nodes []WebNode) {
+func ParseDirList(html, parentURL string, nodeDepth int, nodesDone bool, pConfig ParserConfig) (nodes []WebNode) {
 	dirListEntries := pConfig.CompiledRegexp.FindAllStringSubmatch(html, -1)
 	// spew.Dump(dirListEntries)
 	nodes = make([]WebNode, 0, len(dirListEntries))
 	for _, v := range dirListEntries {
 		node, skip := parseDirListEntry(v, parentURL, pConfig)
 		if !skip {
+			if nodesDone {
+				node.nodeStatus = done
+			}
 			node.nodeDepth = nodeDepth
 			nodes = append(nodes, node)
 		}

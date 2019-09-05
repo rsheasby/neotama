@@ -6,11 +6,11 @@ import (
 )
 
 type WnlPrinter struct {
-	wnl       *WebNodeList
+	wnl          *WebNodeList
 	outputFormat OutputFormat
-	treeLines []bool
-	lastDepth int
-	printIndex int
+	treeLines    []bool
+	lastDepth    int
+	printIndex   int
 }
 
 func CreateWnlPrinter(wnl *WebNodeList, of OutputFormat) (wp WnlPrinter) {
@@ -54,8 +54,10 @@ func (wp *WnlPrinter) PrintDone() {
 	for ; wp.printIndex < len(l.list); wp.printIndex++ {
 		if l.list[wp.printIndex].nodeStatus == done {
 			switch wp.outputFormat {
-			case tree: wp.treePrintNode(wp.printIndex)
-			case urlencoded: fmt.Println(wp.wnl.list[wp.printIndex].path)
+			case tree:
+				wp.treePrintNode(wp.printIndex)
+			case urlencoded:
+				fmt.Println(wp.wnl.list[wp.printIndex].path)
 			case list:
 				path, _ := url.PathUnescape(wp.wnl.list[wp.printIndex].path)
 				fmt.Println(path)

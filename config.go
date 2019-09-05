@@ -19,6 +19,7 @@ const (
 type JobConfig struct {
 	url     string
 	threads int
+	depthLimit int
 	pConfig ParserConfig
 	outputFormat OutputFormat
 }
@@ -59,7 +60,8 @@ func ReadConfig() (config JobConfig) {
 	parser := argparse.NewParser("", "Safely and quickly crawls a directory listing and outputs a pretty tree.")
 
 	url := parser.String("u", "url", &argparse.Options{Required: true, Help: "URL to crawl"})
-	threads := parser.Int("t", "threads", &argparse.Options{Required: false, Help: "Maximum number of network threads to open at once", Default: 10})
+	threads := parser.Int("t", "threads", &argparse.Options{Required: false, Help: "Maximum number of concurrent connections", Default: 10})
+	depthLimit := parser.Int("d", "depth", &argparse.Options{Required: false, Help: "Maximum depth to traverse. Depth of 0 means only query the provided URL. Value of -1 means unlimited", Default: -1})
 	configFile := parser.String("c", "config", &argparse.Options{Required: false, Help: "Config file to use for parsing the directory listing"})
 	outputFormat := parser.Selector("o", "output", []string{"tree", "list", "urlencoded"}, &argparse.Options{Required: false, Default: "tree", Help: "Output format of results"})
 
@@ -70,6 +72,7 @@ func ReadConfig() (config JobConfig) {
 
 	config.url = *url
 	config.threads = *threads
+	config.depthLimit = *depthLimit
 	config.pConfig = readParserConfig(*configFile)
 	switch *outputFormat {
 	case "tree": config.outputFormat = tree

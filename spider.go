@@ -40,7 +40,7 @@ func Spider(job JobConfig) {
 			go func(node WebNode) {
 				html := getUrl(node.path)
 				<-sem
-				nodes := ParseDirList(html, node.path, node.nodeDepth+1, job.pConfig)
+				nodes := ParseDirList(html, node.path, node.nodeDepth+1, job.depthLimit != -1 && node.nodeDepth >= job.depthLimit, job.pConfig)
 				wnl.InsertSorted(nodes, node.path, true)
 				wnl.SetStatus(node.path, done)
 			}(pending)

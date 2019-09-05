@@ -19,7 +19,6 @@ type WebNodeList struct {
 	busyCount int
 	doneCount int
 
-	pendingPointer int
 	busyPointer int
 }
 
@@ -100,9 +99,8 @@ func (l *WebNodeList) GetPending() (result WebNode, wait bool) {
 		wait = true
 		return
 	}
-	for i := 0; i < len(l.list); i++ {
+	for i := range(l.list) {
 		if l.list[i].nodeStatus == pending {
-			l.pendingPointer = i
 			l.setStatusByIndex(i, busy)
 			result = l.list[i]
 			return
@@ -115,7 +113,7 @@ func (l *WebNodeList) GetPending() (result WebNode, wait bool) {
 func (l *WebNodeList) SetStatus(path string, status NodeStatus) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
-	for i := 0; i < len(l.list); i++ {
+	for i := range(l.list) {
 		if l.list[i].path == path {
 			l.setStatusByIndex(i, status)
 			return
