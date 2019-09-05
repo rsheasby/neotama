@@ -3,6 +3,7 @@ package main
 import (
 	"sort"
 	"sync"
+	"unicode"
 )
 
 func CreateWebNodeList() (result WebNodeList) {
@@ -22,9 +23,26 @@ type WebNodeList struct {
 	busyPointer int
 }
 
+func compareStrings(lhs, rhs string) (validOrder bool) {
+	// Create left and right rune slices
+	lrs, rrs := []rune(lhs), []rune(rhs)
+	for i := 0; i < len(lrs) && i < len(lrs); i++ {
+		if lhs != rhs {
+			lhsLower := unicode.ToLower(lrs[i])
+			rhsLower := unicode.ToLower(rrs[i])
+			if lhsLower == rhsLower {
+				return lrs[i] < rrs[i]
+			} else {
+				return lhsLower < rhsLower
+			}
+		}
+	}
+	return len(lhs) < len(rhs)
+}
+
 func compareWebNodes(lhs, rhs *WebNode) (validOrder bool) {
 	switch {
-		case lhs.nodeType == rhs.nodeType: return lhs.path < rhs.path
+		case lhs.nodeType == rhs.nodeType: return compareStrings(lhs.name, rhs.name)
 		case lhs.nodeType == file: return true
 		default: return false
 	}
