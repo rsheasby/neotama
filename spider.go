@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-func getUrl(url string) (body string) {
+func getUrl(url string) (body string, fail bool) {
 	for i := 0; i < 3; i++ {
 		res, err := http.Get(url)
 		if err != nil {
@@ -14,15 +14,15 @@ func getUrl(url string) (body string) {
 		}
 		defer res.Body.Close()
 		body, _ := ioutil.ReadAll(res.Body)
-		return string(body)
+		return string(body), false
 	}
-	return ""
+	return "", true
 }
 
 func Spider(job JobConfig) {
 	sem := make(chan bool, job.threads)
 	wnl := CreateWebNodeList()
-	wp := CreateWnlPrinter(&wnl, job.outputFormat)
+	wp := CreateWnlPrinter(&wnl, job.outputFormat, job.colorOption)
 	wnl.InsertSorted([]WebNode{{pending, directory, false, 0, true, job.url, job.url, nil, 0, ""}}, "", false)
 	for {
 		if wnl.IsDone() {
@@ -38,10 +38,15 @@ func Spider(job JobConfig) {
 			continue
 		} else {
 			go func(node WebNode) {
-				html := getUrl(node.path)
+				html, fail := getUrl(node.path)
 				<-sem
-				nodes := ParseDirList(html, node.path, node.nodeDepth+1, job.depthLimit != -1 && node.nodeDepth >= job.depthLimit, job.pConfig)
-				wnl.InsertSorted(nodes, node.path, true)
+				if fail {
+					node.nodeFail = true
+					wnl.SetFailed(node.path)
+				} else {
+					nodes := ParseDirList(html, node.path, node.nodeDepth+1, job.depthLimit != -1 && node.nodeDepth >= job.depthLimit, job.pConfig)
+					wnl.InsertSorted(nodes, node.path, true)
+				}
 				wnl.SetStatus(node.path, done)
 			}(pending)
 		}

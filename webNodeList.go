@@ -12,12 +12,13 @@ func CreateWebNodeList() (result WebNodeList) {
 }
 
 type WebNodeList struct {
-	mux sync.Mutex
+	mux  sync.Mutex
 	list []WebNode
 
 	pendingCount int
-	busyCount int
-	doneCount int
+	busyCount    int
+	doneCount    int
+	failCount    int
 
 	busyPointer int
 }
@@ -41,9 +42,12 @@ func compareStrings(lhs, rhs string) (validOrder bool) {
 
 func compareWebNodes(lhs, rhs *WebNode) (validOrder bool) {
 	switch {
-		case lhs.nodeType == rhs.nodeType: return compareStrings(lhs.name, rhs.name)
-		case lhs.nodeType == file: return true
-		default: return false
+	case lhs.nodeType == rhs.nodeType:
+		return compareStrings(lhs.name, rhs.name)
+	case lhs.nodeType == file:
+		return true
+	default:
+		return false
 	}
 }
 
@@ -75,11 +79,11 @@ func (l *WebNodeList) InsertSorted(nodes []WebNode, parentPath string, sortNodes
 	}
 	for i := l.busyPointer; i < len(l.list); i++ {
 		if l.list[i].nodeStatus == busy && l.list[i].path == parentPath {
-			for k := range(nodes) {
+			for k := range nodes {
 				nodes[k].nodeDepth = l.list[i].nodeDepth + 1
 			}
-			nodes[len(nodes) - 1].nodeLastSibling = true
-			l.insertAtIndex(nodes, i + 1)
+			nodes[len(nodes)-1].nodeLastSibling = true
+			l.insertAtIndex(nodes, i+1)
 			return
 		}
 	}
@@ -99,7 +103,7 @@ func (l *WebNodeList) GetPending() (result WebNode, wait bool) {
 		wait = true
 		return
 	}
-	for i := range(l.list) {
+	for i := range l.list {
 		if l.list[i].nodeStatus == pending {
 			l.setStatusByIndex(i, busy)
 			result = l.list[i]
@@ -110,10 +114,24 @@ func (l *WebNodeList) GetPending() (result WebNode, wait bool) {
 	return
 }
 
+func (l *WebNodeList) SetFailed(path string) {
+	l.mux.Lock()
+	defer l.mux.Unlock()
+	for i := range l.list {
+		if l.list[i].path == path {
+			if !l.list[i].nodeFail {
+				l.failCount++
+				l.list[i].nodeFail = true
+			}
+			return
+		}
+	}
+}
+
 func (l *WebNodeList) SetStatus(path string, status NodeStatus) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
-	for i := range(l.list) {
+	for i := range l.list {
 		if l.list[i].path == path {
 			l.setStatusByIndex(i, status)
 			return
@@ -123,14 +141,20 @@ func (l *WebNodeList) SetStatus(path string, status NodeStatus) {
 
 func (l *WebNodeList) setStatusByIndex(index int, status NodeStatus) {
 	switch l.list[index].nodeStatus {
-		case pending: l.pendingCount--
-		case busy: l.busyCount--
-		case done: l.doneCount--
+	case pending:
+		l.pendingCount--
+	case busy:
+		l.busyCount--
+	case done:
+		l.doneCount--
 	}
 	switch status {
-		case pending: l.pendingCount++
-		case busy: l.busyCount++
-		case done: l.doneCount++
+	case pending:
+		l.pendingCount++
+	case busy:
+		l.busyCount++
+	case done:
+		l.doneCount++
 	}
 	l.list[index].nodeStatus = status
 	return
