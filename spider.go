@@ -6,8 +6,8 @@ import (
 	"runtime"
 )
 
-func getUrl(url string) (body string, fail bool) {
-	for i := 0; i < 3; i++ {
+func getUrl(url string, retryLimit int) (body string, fail bool) {
+	for ; retryLimit >= 0; retryLimit-- {
 		res, err := http.Get(url)
 		if err != nil {
 			continue
@@ -38,7 +38,7 @@ func Spider(job JobConfig) {
 			continue
 		} else {
 			go func(node WebNode) {
-				html, fail := getUrl(node.path)
+				html, fail := getUrl(node.path, job.retryLimit)
 				<-sem
 				if fail {
 					node.nodeFail = true

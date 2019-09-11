@@ -29,6 +29,7 @@ const (
 type JobConfig struct {
 	url          string
 	threads      int
+	retryLimit   int
 	depthLimit   int
 	colorOption  ColorOption
 	colorValues  string
@@ -73,6 +74,7 @@ func ReadConfig() (config JobConfig) {
 
 	url := parser.String("u", "url", &argparse.Options{Required: true, Help: "URL to crawl"})
 	threads := parser.Int("t", "threads", &argparse.Options{Required: false, Help: "Maximum number of concurrent connections", Default: 10})
+	retryLimit := parser.Int("r", "retry", &argparse.Options{Required: false, Help: "Maximum amount of times to retry a failed query", Default: 3})
 	depthLimit := parser.Int("d", "depth", &argparse.Options{Required: false, Help: "Maximum depth to traverse. Depth of 0 means only query the provided URL. Value of -1 means unlimited", Default: -1})
 	color := parser.Selector("", "color", []string{"auto", "on", "off", "lol"}, &argparse.Options{Required: false, Default: "auto", Help: "Whether to output color codes or not. Color codes will be read from LS_COLORS if it exists, and will fallback to some basic defaults otherwise"})
 	configFile := parser.String("c", "config", &argparse.Options{Required: false, Help: "Config file to use for parsing the directory listing"})
@@ -85,6 +87,7 @@ func ReadConfig() (config JobConfig) {
 
 	config.url = *url
 	config.threads = *threads
+	config.retryLimit = *retryLimit
 	config.depthLimit = *depthLimit
 	config.pConfig = readParserConfig(*configFile)
 
