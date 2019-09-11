@@ -33,6 +33,7 @@ type JobConfig struct {
 	threads      int
 	retryLimit   int
 	depthLimit   int
+	noSort       bool
 	colorOption  ColorOption
 	colorValues  string
 	pConfig      ParserConfig
@@ -100,6 +101,7 @@ func ReadConfig() (config JobConfig) {
 	threads := parser.Int("t", "threads", &argparse.Options{Required: false, Help: "Maximum number of concurrent connections", Default: 10})
 	retryLimit := parser.Int("r", "retry", &argparse.Options{Required: false, Help: "Maximum amount of times to retry a failed query", Default: 3})
 	depthLimit := parser.Int("d", "depth", &argparse.Options{Required: false, Help: "Maximum depth to traverse. Depth of 0 means only query the provided URL. Value of -1 means unlimited", Default: -1})
+	noSort := parser.Flag("", "disable-sorting", &argparse.Options{Required: false, Help: "Disables sorting. Default behavior is to sort by path alphabetically, with files above directories"})
 	color := parser.Selector("", "color", []string{"auto", "on", "off", "lol"}, &argparse.Options{Required: false, Default: "auto", Help: "Whether to output color codes or not. Color codes will be read from LS_COLORS if it exists, and will fallback to some basic defaults otherwise"})
 	server := parser.Selector("s", "server", []string{"auto", "apache"}, &argparse.Options{Required: false, Default: "auto", Help: "Server type to use for parsing. Auto will detect the server based on the HTTP headers"})
 	configFile := parser.String("p", "parser-config", &argparse.Options{Required: false, Help: "Config file to use for parsing the directory listing"})
@@ -116,6 +118,7 @@ func ReadConfig() (config JobConfig) {
 	config.threads = *threads
 	config.retryLimit = *retryLimit
 	config.depthLimit = *depthLimit
+	config.noSort = *noSort
 	if *configFile != "" {
 		config.pConfig = readParserConfig(*configFile)
 	} else {

@@ -45,7 +45,7 @@ func Spider(job JobConfig) {
 					wnl.SetFailed(node.path)
 				} else {
 					nodes := ParseDirList(html, node.path, node.nodeDepth+1, job.depthLimit != -1 && node.nodeDepth >= job.depthLimit, job.pConfig)
-					wnl.InsertSorted(nodes, node.path, true)
+					wnl.InsertSorted(nodes, node.path, !job.noSort)
 				}
 				wnl.SetStatus(node.path, done)
 			}(pending)
