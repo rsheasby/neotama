@@ -57,9 +57,14 @@ func readParserConfig(filename string) (result ParserConfig) {
 	if fileErr != nil {
 		log.Fatalf("Could not read parser config file \"%s\".", filename)
 	}
-	jsonErr := json.Unmarshal(fileContents, &result)
+	return parseParserConfig(fileContents)
+}
+
+// I know the name is ass, but I can't think of a better one. If whoever is reading this can think of a better name, please open a PR.
+func parseParserConfig(jsonConfig []byte) (result ParserConfig) {
+	jsonErr := json.Unmarshal(jsonConfig, &result)
 	if jsonErr != nil {
-		log.Fatalf("Parser config file \"%s\" is not valid JSON.", filename)
+		log.Fatalf("Config does not contain valid JSON.")
 	}
 	compRegexp, regexpErr := regexp.Compile(result.Regex.LineMatch)
 	if regexpErr != nil {
@@ -77,19 +82,23 @@ func ReadConfig() (config JobConfig) {
 	retryLimit := parser.Int("r", "retry", &argparse.Options{Required: false, Help: "Maximum amount of times to retry a failed query", Default: 3})
 	depthLimit := parser.Int("d", "depth", &argparse.Options{Required: false, Help: "Maximum depth to traverse. Depth of 0 means only query the provided URL. Value of -1 means unlimited", Default: -1})
 	color := parser.Selector("", "color", []string{"auto", "on", "off", "lol"}, &argparse.Options{Required: false, Default: "auto", Help: "Whether to output color codes or not. Color codes will be read from LS_COLORS if it exists, and will fallback to some basic defaults otherwise"})
-	configFile := parser.String("c", "config", &argparse.Options{Required: false, Help: "Config file to use for parsing the directory listing"})
+	server := parser.Selector("s", "server", []string{"auto", "apache"}, &argparse.Options{Required: false, Default: "auto", Help: "Server type to use for parsing. Auto will detect the server based on the HTTP headers"})
+	configFile := parser.String("p", "parserconfig", &argparse.Options{Required: false, Help: "Config file to use for parsing the directory listing"})
 	outputFormat := parser.Selector("o", "output", []string{"tree", "list", "urlencoded"}, &argparse.Options{Required: false, Default: "tree", Help: "Output format of results"})
 
 	if err := parser.Parse(os.Args); err != nil {
-		log.Printf("Command line argument error: %s", err)
-		os.Exit(1)
+		log.Fatalf("Command line argument error: %s", err)
 	}
 
 	config.url = *url
 	config.threads = *threads
 	config.retryLimit = *retryLimit
 	config.depthLimit = *depthLimit
-	config.pConfig = readParserConfig(*configFile)
+	if server != nil {
+		config.pConfig = BuiltinConfigs[*server]
+	} else {
+		config.pConfig = readParserConfig(*configFile)
+	}
 
 	switch *color {
 	case "auto":
