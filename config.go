@@ -110,6 +110,9 @@ func ReadConfig() (config JobConfig) {
 	}
 
 	config.url = *url
+	if config.url[len(config.url)-1] != '/' {
+		config.url += "/"
+	}
 	config.threads = *threads
 	config.retryLimit = *retryLimit
 	config.depthLimit = *depthLimit
