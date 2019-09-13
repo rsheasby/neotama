@@ -12,7 +12,7 @@ You'll need to have a Go toolchain installed. On most ditributions the package i
 Then, simply run `go get github.com/rsheasby/neotama`.
 
 This will automatically get the latest version of neotama including dependencies, and compile it into your GOPATH.
-You'll probably want to add the GOPATH bnaries folder to your path too. By default this is simply `~/go/bin/`.
+You'll probably want to add the GOPATH binaries folder to your path too. By default this is simply `~/go/bin/`.
 
 ## Usage
 
