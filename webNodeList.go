@@ -159,3 +159,7 @@ func (l *WebNodeList) setStatusByIndex(index int, status NodeStatus) {
 	l.list[index].nodeStatus = status
 	return
 }
+
+func (l *WebNodeList) GetStats() (done, fail, total int) {
+	return l.doneCount + l.failCount, l.failCount, l.doneCount + l.pendingCount + l.busyCount + l.failCount
+}

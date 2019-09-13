@@ -4,12 +4,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"runtime"
+	"time"
 )
 
 func getUrl(url string, retryLimit int) (body string, fail bool) {
 	for ; retryLimit >= 0; retryLimit-- {
 		res, err := http.Get(url)
 		if err != nil {
+			time.Sleep(time.Millisecond * 333)
 			continue
 		}
 		defer res.Body.Close()
@@ -22,11 +24,16 @@ func getUrl(url string, retryLimit int) (body string, fail bool) {
 func Spider(job JobConfig) {
 	sem := make(chan bool, job.threads)
 	wnl := CreateWebNodeList()
-	wp := CreateWnlPrinter(&wnl, job.outputFormat, job.colorOption)
 	wnl.InsertSorted([]WebNode{{pending, directory, false, 0, true, job.url, job.url, nil, 0, ""}}, "", false)
+	pbw, pbwo, pbwe := CreateProgressBarWriter(&wnl, job.colorOption == lol)
+	wp := CreateWnlPrinter(&wnl, pbwo, job.outputFormat, job.colorOption)
+	pbw.ShowBar()
+	pbwe.Write([]byte("\n\n"))
+	// select {}
 	for {
 		if wnl.IsDone() {
 			wp.PrintDone()
+			pbw.HideBar()
 			return
 		}
 		wp.PrintDone()
