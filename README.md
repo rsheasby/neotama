@@ -7,8 +7,11 @@ A while back I needed a way to spider an apache directory listing and was surpri
 Neotama is a spider specifically designed to parse directory listings, only querying directories and reading metadata (file size, modification time, etc) from the contents of the directory listing. The results are displayed in a `tree`-esque ASCII tree including color formatting based on file type. It's concurrent too, so it does this pretty damn fast. Finally, it's extensible, allowing spidering unsupported servers using a user-defined config file. The parsing is done using regex, so it's not too difficult to throw together a config file for an uncommon server.
 
 ## Install
-You'll need to have a Go toolchain installed. On most ditributions this package is called "golang".
-Then, simply run `go get github.com/rsheasby/neotama`. This will automatically get the latest version of neotama including dependencies, and compile it into your GOPATH.
+You'll need to have a Go toolchain installed. On most ditributions the package is "golang".
+
+Then, simply run `go get github.com/rsheasby/neotama`.
+
+This will automatically get the latest version of neotama including dependencies, and compile it into your GOPATH.
 You'll probably want to add the GOPATH bnaries folder to your path too. By default this is simply `~/go/bin/`.
 
 ## Usage
