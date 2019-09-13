@@ -151,8 +151,8 @@ func (pbw *ProgressBarWriter) updateBar() {
 	padWidth := barWidth - doneWidth
 	var loadBar1 string
 	var loadBar2 string
-	if barWidth > 0 {
-		if pbw.lol {
+	if pbw.lol {
+		if barWidth > 8 {
 			doneWidth -= 8
 			if doneWidth < 0 {
 				padWidth += doneWidth
@@ -160,7 +160,9 @@ func (pbw *ProgressBarWriter) updateBar() {
 			}
 			loadBar1 = string(pbw.getRainbow([]byte(strings.Repeat("⡪", doneWidth)))) + nyanStrings[0] + strings.Repeat("⠡", padWidth) + " ┋"
 			loadBar2 = string(pbw.getRainbow([]byte(strings.Repeat("⡪", doneWidth)))) + nyanStrings[1] + strings.Repeat("⠡", padWidth) + " ┋"
-		} else {
+		}
+	} else {
+		if barWidth > 0 {
 			loadBar1 = strings.Repeat("█", doneWidth) + strings.Repeat("░", padWidth) + " ┋"
 			loadBar2 = loadBar1
 		}
