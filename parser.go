@@ -24,12 +24,18 @@ func parseFilesize(filesize string) (bytes int64) {
 		multiplier = 1024
 	}
 	switch {
-	case strings.ContainsAny(matches[2], "kK"): multiplier = math.Pow(multiplier, 1)
-	case strings.ContainsAny(matches[2], "mM"): multiplier = math.Pow(multiplier, 2)
-	case strings.ContainsAny(matches[2], "gG"): multiplier = math.Pow(multiplier, 3)
-	case strings.ContainsAny(matches[2], "tT"): multiplier = math.Pow(multiplier, 4)
-	case strings.ContainsAny(matches[2], "pP"): multiplier = math.Pow(multiplier, 5)
-	case strings.ContainsAny(matches[2], "zZ"): multiplier = math.Pow(multiplier, 6)
+	case strings.ContainsAny(matches[2], "kK"):
+		multiplier = math.Pow(multiplier, 1)
+	case strings.ContainsAny(matches[2], "mM"):
+		multiplier = math.Pow(multiplier, 2)
+	case strings.ContainsAny(matches[2], "gG"):
+		multiplier = math.Pow(multiplier, 3)
+	case strings.ContainsAny(matches[2], "tT"):
+		multiplier = math.Pow(multiplier, 4)
+	case strings.ContainsAny(matches[2], "pP"):
+		multiplier = math.Pow(multiplier, 5)
+	case strings.ContainsAny(matches[2], "zZ"):
+		multiplier = math.Pow(multiplier, 6)
 	default:
 		multiplier = 1
 	}
@@ -55,7 +61,9 @@ func splitDirListEntry(html []string, pConfig ParserConfig) (entry DirListEntry)
 	entry.path = html[pConfig.Regex.PathGroup]
 	entry.time = html[pConfig.Regex.TimeGroup]
 	entry.size = html[pConfig.Regex.SizeGroup]
-	entry.description = html[pConfig.Regex.DescriptionGroup]
+	if pConfig.Options.EnableDescription {
+		entry.description = html[pConfig.Regex.DescriptionGroup]
+	}
 	return
 }
 
@@ -93,7 +101,6 @@ func parseDirListEntry(html []string, parentURL string, pConfig ParserConfig) (n
 
 func ParseDirList(html, parentURL string, nodeDepth int, nodesDone bool, pConfig ParserConfig) (nodes []WebNode) {
 	dirListEntries := pConfig.CompiledRegexp.FindAllStringSubmatch(html, -1)
-	// spew.Dump(dirListEntries)
 	nodes = make([]WebNode, 0, len(dirListEntries))
 	for _, v := range dirListEntries {
 		node, skip := parseDirListEntry(v, parentURL, pConfig)

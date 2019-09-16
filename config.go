@@ -69,6 +69,9 @@ func detectServer(url string, retryLimit int) (server string, fail bool) {
 		if strings.Contains(server, "Apache") {
 			return "apache", false
 		}
+		if strings.Contains(server, "nginx") {
+			return "nginx", false
+		}
 	}
 	return "", true
 }
@@ -85,7 +88,7 @@ func readParserConfig(filename string) (result ParserConfig) {
 func parseParserConfig(jsonConfig []byte) (result ParserConfig) {
 	jsonErr := json.Unmarshal(jsonConfig, &result)
 	if jsonErr != nil {
-		log.Fatalf("Config does not contain valid JSON.")
+		log.Fatalf("Config does not contain valid JSON: %s", jsonErr)
 	}
 	compRegexp, regexpErr := regexp.Compile(result.Regex.LineMatch)
 	if regexpErr != nil {
@@ -105,7 +108,7 @@ func ReadConfig() (config JobConfig) {
 	noSort := parser.Flag("", "disable-sorting", &argparse.Options{Required: false, Help: "Disables sorting. Default behavior is to sort by path alphabetically, with files above directories"})
 	progress := parser.Selector("", "progress", []string{"auto", "on", "off"}, &argparse.Options{Required: false, Default: "auto", Help: "Whether to show the stderr progress bar or not"})
 	color := parser.Selector("", "color", []string{"auto", "on", "off", "lol"}, &argparse.Options{Required: false, Default: "auto", Help: "Whether to output color codes or not. Color codes will be read from LS_COLORS if it exists, and will fallback to some basic defaults otherwise"})
-	server := parser.Selector("s", "server", []string{"auto", "apache"}, &argparse.Options{Required: false, Default: "auto", Help: "Server type to use for parsing. Auto will detect the server based on the HTTP headers"})
+	server := parser.Selector("s", "server", []string{"auto", "apache", "nginx"}, &argparse.Options{Required: false, Default: "auto", Help: "Server type to use for parsing. Auto will detect the server based on the HTTP headers"})
 	configFile := parser.String("p", "parser-config", &argparse.Options{Required: false, Help: "Config file to use for parsing the directory listing"})
 	outputFormat := parser.Selector("o", "output", []string{"tree", "list", "urlencoded"}, &argparse.Options{Required: false, Default: "tree", Help: "Output format of results"})
 

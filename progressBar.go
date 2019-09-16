@@ -84,7 +84,6 @@ func CreateProgressBarWriter(wnl *WebNodeList, showProgress, lol bool) (pbwRef *
 	pbwe.pbw = &pbw
 	pbw.wnl = wnl
 	pbw.lol = lol
-	pbw.barShown = showProgress
 	if lol {
 		lolbuf := make([]byte, 0)
 		pbw.lolDw.buffer = &lolbuf
@@ -101,7 +100,11 @@ func CreateProgressBarWriter(wnl *WebNodeList, showProgress, lol bool) (pbwRef *
 	}
 	ticker := time.NewTicker(time.Millisecond * 40)
 	go func() {
+		var once sync.Once
 		for {
+			if showProgress {
+				once.Do(pbw.ShowBar)
+			}
 			<-ticker.C
 			pbw.currentSpin++
 			if pbw.currentSpin >= len(spinnerStrings) {
