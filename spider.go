@@ -25,11 +25,9 @@ func Spider(job JobConfig) {
 	sem := make(chan bool, job.threads)
 	wnl := CreateWebNodeList()
 	wnl.InsertSorted([]WebNode{{pending, directory, false, 0, true, job.url, job.url, nil, 0, ""}}, "", false)
-	pbw, pbwo, pbwe := CreateProgressBarWriter(&wnl, job.colorOption == lol)
+	pbw, pbwo, pbwe := CreateProgressBarWriter(&wnl, job.showProgress, job.colorOption == lol)
 	wp := CreateWnlPrinter(&wnl, pbwo, job.outputFormat, job.colorOption)
-	pbw.ShowBar()
-	pbwe.Write([]byte("\n\n"))
-	// select {}
+	pbwe.Write([]byte(""))
 	for {
 		if wnl.IsDone() {
 			wp.PrintDone()

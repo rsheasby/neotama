@@ -76,7 +76,7 @@ type ProgressBarWriter struct {
 	lolDw       DummyWriter
 }
 
-func CreateProgressBarWriter(wnl *WebNodeList, lol bool) (pbwRef *ProgressBarWriter, pbwoRef *PbwStdout, pbweRef *PbwStderr) {
+func CreateProgressBarWriter(wnl *WebNodeList, showProgress, lol bool) (pbwRef *ProgressBarWriter, pbwoRef *PbwStdout, pbweRef *PbwStderr) {
 	var pbw ProgressBarWriter
 	var pbwo PbwStdout
 	var pbwe PbwStderr
@@ -84,6 +84,7 @@ func CreateProgressBarWriter(wnl *WebNodeList, lol bool) (pbwRef *ProgressBarWri
 	pbwe.pbw = &pbw
 	pbw.wnl = wnl
 	pbw.lol = lol
+	pbw.barShown = showProgress
 	if lol {
 		lolbuf := make([]byte, 0)
 		pbw.lolDw.buffer = &lolbuf
@@ -136,11 +137,11 @@ func (pbw *ProgressBarWriter) getRainbow(input []byte) (rainbow []byte) {
 }
 
 func (pbw *ProgressBarWriter) updateBar() {
+	pbw.mux.Lock()
+	defer pbw.mux.Unlock()
 	if !pbw.barShown {
 		return
 	}
-	pbw.mux.Lock()
-	defer pbw.mux.Unlock()
 	pbw.HideBar()
 	defer pbw.ShowBar()
 	termWidth, _, _ := terminal.GetSize(2)
@@ -177,8 +178,12 @@ type PbwStderr struct {
 }
 
 func (pbwe *PbwStderr) Write(p []byte) (n int, err error) {
-	pbwe.pbw.HideBar()
-	defer pbwe.pbw.ShowBar()
+	pbwe.pbw.mux.Lock()
+	defer pbwe.pbw.mux.Unlock()
+	if pbwe.pbw.barShown {
+		pbwe.pbw.HideBar()
+		defer pbwe.pbw.ShowBar()
+	}
 	return os.Stderr.Write(p)
 }
 
@@ -198,8 +203,10 @@ func (pbwo *PbwStdout) Flush() {
 	if len(pbwo.buffer) > 0 {
 		pbwo.pbw.mux.Lock()
 		defer pbwo.pbw.mux.Unlock()
-		pbwo.pbw.HideBar()
-		defer pbwo.pbw.ShowBar()
+		if pbwo.pbw.barShown {
+			pbwo.pbw.HideBar()
+			defer pbwo.pbw.ShowBar()
+		}
 		pbwo.outputWriter.Write(pbwo.buffer)
 		pbwo.buffer = pbwo.buffer[:0]
 	}
