@@ -17,14 +17,15 @@ You'll probably want to add the GOPATH binaries folder to your path too. By defa
 ## Usage
 
 ```
-usage: neotama [-h|--help] -u|--url "<value>" [-t|--threads <integer>]
-               [-r|--retry <integer>] [-d|--depth <integer>]
-               [--disable-sorting] [--color (auto|on|off|lol)] [-s|--server
-               (auto|apache)] [-p|--parser-config "<value>"] [-o|--output
-               (tree|list|urlencoded)]
+usage: ./neotama [-h|--help] -u|--url "<value>" [-t|--threads <integer>]
+                 [-r|--retry <integer>] [-d|--depth <integer>]
+                 [--disable-sorting] [--progress (auto|on|off)] [--color
+                 (auto|on|off|lol)] [-s|--server (auto|apache|nginx)]
+                 [-p|--parser-config "<value>"] [-o|--output
+                 (tree|list|urlencoded)]
 
-               Safely and quickly crawls a directory listing, outputting a
-               pretty tree.
+                 Safely and quickly crawls a directory listing, outputting a
+                 pretty tree.
 
 Arguments:
 
@@ -38,6 +39,8 @@ Arguments:
                          Default: -1
       --disable-sorting  Disables sorting. Default behavior is to sort by path
                          alphabetically, with files above directories
+      --progress         Whether to show the stderr progress bar or not.
+                         Default: auto
       --color            Whether to output color codes or not. Color codes will
                          be read from LS_COLORS if it exists, and will fallback
                          to some basic defaults otherwise. Default: auto
@@ -45,5 +48,5 @@ Arguments:
                          server based on the HTTP headers. Default: auto
   -p  --parser-config    Config file to use for parsing the directory listing
   -o  --output           Output format of results. Default: tree
-```
+  ```
 
